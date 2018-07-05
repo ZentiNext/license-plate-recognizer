@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import pytesseract as tess
+from PIL import Image
 
 
 def preprocess(img):
@@ -30,9 +32,17 @@ def clean(img,contours):
             if (is_max_white(plate_img)):
                 clean_plate, rect = cleanPlate(plate_img)
                 if rect:
+                    x1, y1, w1, h1 = rect
+                    x, y, w, h = x + x1, y + y1, w1, h1
                     cv2.imshow("Cleaned Plate", clean_plate)
                     cv2.waitKey(0)
-                    return clean_plate
+                    plate_im = Image.fromarray(clean_plate)
+                    text = tess.image_to_string(plate_im, lang='eng')
+                    print("Detected Text : ", text)
+                    img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    cv2.imshow("Detected Plate", img)
+                    cv2.waitKey(0)
+
 
 
 def validate_rotation_and_ratio(rect):
@@ -91,8 +101,10 @@ def cleanPlate(plate):
         return plate, None
 
 
-img = cv2.imread("testData/car5.jpg")
+img = cv2.imread("testData/car6.jpg")
 threshold_img = preprocess(img)
 contours= extract_contours(threshold_img)
 cleanedPlate  = clean(img,contours)
+
+
 
